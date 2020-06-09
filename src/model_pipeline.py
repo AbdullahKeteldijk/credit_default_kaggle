@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import json
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -8,6 +9,9 @@ from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
+
+from sklearn.utils.testing import ignore_warnings
+from sklearn.exceptions import ConvergenceWarning
 
 from src.data_cleaner import DataCleaner
 from src.ensemble_model import EnsembleModel
@@ -64,7 +68,7 @@ class ModelPipeline():
             y_pred, y_pred_mat = self.ens.predict(self.X_test)
 
             if self.mean_model:
-                self.prediction = self.probabilities_to_int(self.y_pred)
+                self.prediction = self.probabilities_to_int(y_pred)
 
             else:
                 self.lr_pred = LogisticRegression(random_state=42, solver=self.solver)
@@ -80,13 +84,29 @@ class ModelPipeline():
         else:
             self.model_name = "Ensemble model with modelled prediction"
 
-    def print_model_performance(self):
+    def print_model_performance(self, print_output=True):
 
         if self.model_name == None:
             self.generate_model_name()
 
-        print('Model:', self.model_name)
-        print('Accuracy score:', accuracy_score(self.y_test, self.prediction))
-        print('F1 score:', f1_score(self.y_test, self.prediction))
-        print('Precision score:', precision_score(self.y_test, self.prediction))
-        print('Recall score:', recall_score(self.y_test, self.prediction))
+        self.accuracy = accuracy_score(self.y_test, self.prediction)
+        self.f1 = f1_score(self.y_test, self.prediction)
+        self.precision = precision_score(self.y_test, self.prediction)
+        self.recall = recall_score(self.y_test, self.prediction)
+
+        if print_output:
+            print('Model:', self.model_name)
+            print('Accuracy score:', self.accuracy)
+            print('F1 score:', self.f1)
+            print('Precision score:', self.precision)
+            print('Recall score:', self.recall)
+
+    def save_output(self, path):
+
+        output = {'Accuracy': self.accuracy,
+                    'F1 score': self.f1,
+                    'Precision': self.precision,
+                    'Recall': self.recall}
+
+        with open(path, 'w') as fp:
+            json.dump(output, fp)

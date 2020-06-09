@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+
+from sklearn.model_selection import train_test_split
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import r2_score
 
@@ -27,15 +29,15 @@ class DataCleaner:
 
     def predict_na(self, target, clf=None):
 
-        df_train = self.df[~self.df[target].isna()]
-        df_test = self.df[self.df[target].isna()]
+        df_train = self.df[~self.df[target].isna()].copy()
+        df_test = self.df[self.df[target].isna()].copy()
         df_test_ = df_test.drop(columns=['BAD', 'DEROG', 'DELINQ'], axis=1)
 
         if clf == None:
             clf = self.fill_na_model(df_train, target)
 
         y_pred = clf.predict(df_test_)
-        df_test[target] = y_pred
+        df_test.loc[:,target] = y_pred
         df_new = pd.concat([df_train, df_test])
 
         return df_new, clf
