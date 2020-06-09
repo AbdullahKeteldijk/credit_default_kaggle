@@ -22,7 +22,6 @@ class ModelPipeline():
     ''''
     This pipeline contains both the DataCleaner and EnsembleModel classes and combines them to easily execute the
     whole process. It also contains functions to calculate and save some performance metrics.
-
     '''
 
     def __init__(self, df, test_size=0.33, random_state=42, row_sampling=True,
@@ -30,7 +29,6 @@ class ModelPipeline():
                  cutoff=0, model_name=None, solver='lbfgs'):
 
         ''''
-
         :param test_size: float - The fraction of the dataframe thest should be used as a test set
         :param random_state: int - A number that is used as a random seed to ensure the model performs exactly the same
             each it is run with a given set of hyperparameters
@@ -57,7 +55,12 @@ class ModelPipeline():
         self.solver = solver
 
     def probabilities_to_int(self, y_pred):
+        '''
+        Transforms predictions (float) to either a 0 or 1 (int) based on the specified cutoff point.
 
+        :param y_pred: numpy array - Vector containing predictions (float)
+        :return y_pred: numpy array - Vector containing predictions (int)
+        '''
         for i in range(len(y_pred)):
             if y_pred[i] > self.cutoff:
                 y_pred[i] = 1
@@ -68,6 +71,10 @@ class ModelPipeline():
 
     @ignore_warnings(category=ConvergenceWarning)
     def fit_transform(self):
+        '''
+        This function calls the DataCleaner function, then train the model and makes a prediction
+        according to the specified hyperparameters.
+        '''
 
         self.df = DataCleaner(self.df).clean()
 
@@ -96,8 +103,9 @@ class ModelPipeline():
                 self.lr_pred.fit(y_pred_mat, self.y_test)
                 self.prediction = self.lr_pred.predict(y_pred_mat)
 
-    def generate_model_name(self):
 
+    def generate_model_name(self):
+        ''' Generates model name based on hyperparameter input'''
         if self.simple_model:
             self.model_name = "Simple Logit model"
         elif self.mean_model:
@@ -105,8 +113,9 @@ class ModelPipeline():
         else:
             self.model_name = "Ensemble model with modelled prediction"
 
-    def print_model_performance(self, print_output=True):
 
+    def print_model_performance(self, print_output=True):
+        ''' Print model performance. Assigns model name in case it is unspecified'''
         if self.model_name == None:
             self.generate_model_name()
 
@@ -122,8 +131,9 @@ class ModelPipeline():
             print('Precision score:', self.precision)
             print('Recall score:', self.recall)
 
-    def save_output(self, path):
 
+    def save_output(self, path):
+        ''' Saves model perfomance metrics to json format'''
         output = {'Accuracy': self.accuracy,
                     'F1 score': self.f1,
                     'Precision': self.precision,
