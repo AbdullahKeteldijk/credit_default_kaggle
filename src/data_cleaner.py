@@ -7,6 +7,12 @@ from sklearn.metrics import r2_score
 
 
 class DataCleaner:
+    '''
+    This is class cleans the data and performs some very basic feature engineering.
+    By default the nan values of features with a very skewed distribution are filled in by a model
+    trained on all other features. There is also an option to fill the nan values with the mean.
+
+    '''
 
     def __init__(self, df, predict_nan=True):
 
@@ -14,6 +20,15 @@ class DataCleaner:
         self.predict_nan = predict_nan
 
     def fill_na_model(self, df_train, target):
+        '''
+        This function trains the model to replace nan values of some columns with a predicted value,
+        based on the other features in the data
+
+        :param df_train: pandas dataframe - Contains the training data
+        :param target: pandas series - Contains the target variable
+
+        :return clf: sklearn object - This is the trained Gradient Boosting model
+        '''
 
         X = df_train.drop(['BAD', 'DEROG', 'DELINQ'], axis=1)
         y = df_train[target]
@@ -28,7 +43,15 @@ class DataCleaner:
         return clf
 
     def predict_na(self, target, clf=None):
+        '''
+        This function applies the nan value model to predict the missing values
 
+        :param target: pandas series - Contains the target variable
+        :param clf: sklearn object - This is the trained Gradient Boosting model
+
+        :return df_new: pandas dataframe - This is the new dataframe with with the nan values replaced by numbers
+        :return clf: sklearn object - This is the trained Gradient Boosting model
+        '''
         df_train = self.df[~self.df[target].isna()].copy()
         df_test = self.df[self.df[target].isna()].copy()
         df_test_ = df_test.drop(columns=['BAD', 'DEROG', 'DELINQ'], axis=1)
@@ -43,12 +66,17 @@ class DataCleaner:
         return df_new, clf
 
     def dummy_replace(self, column, prefix=None):
-
+        ''' This function replaces a feature with dummy features'''
         df_dummy = pd.get_dummies(self.df[column], prefix=prefix)
         self.df = pd.concat([self.df, df_dummy], axis=1)
         self.df = self.df.drop(columns=[column], axis=1)
 
     def fill_nan(self):
+        '''
+        This function replaces missing values with the median for continuous features.
+        By default the nan values of features with a very skewed distribution are filled in by a model
+        trained on all other features. There is also an option to fill the nan values with the mean.
+        '''
 
         self.df['MORTDUE'] = self.df['MORTDUE'].fillna(self.df['MORTDUE'].median())
         self.df['VALUE'] = self.df['VALUE'].fillna(self.df['VALUE'].median())
@@ -65,14 +93,21 @@ class DataCleaner:
             self.df['DELINQ'] = self.df['DELINQ'].fillna(self.df['DELINQ'].mean())
 
     def feature_engineering(self):
-
+        ''' Some basic feature engineering to change the distribution of the models.'''
         self.df['LOAN'] = np.log(self.df['LOAN'])
         self.df['MORTDUE'] = np.log(self.df['MORTDUE'])
         self.df['VALUE'] = np.log(self.df['VALUE'])
         self.df['YOJ'] = np.sqrt(self.df['YOJ'])
 
     def clean(self, clf_derog=None, clf_delinq=None):
+        '''
+        This function executes all previous functions on the dataframe.
 
+        :param clf_derog: sklearn object - The trained Gradient Boosting model for the DEROG feature.
+        :param clf_delinq: sklearn object - The trained Gradient Boosting model for the DELINQ feature.
+
+        :return df: pandas dataframe - The new dataframe with cleaned features
+        '''
         self.fill_nan()
         self.feature_engineering()
 

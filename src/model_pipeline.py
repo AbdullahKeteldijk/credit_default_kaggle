@@ -19,9 +19,30 @@ from src.ensemble_model import EnsembleModel
 
 class ModelPipeline():
 
+    ''''
+    This pipeline contains both the DataCleaner and EnsembleModel classes and combines them to easily execute the
+    whole process. It also contains functions to calculate and save some performance metrics.
+
+    '''
+
     def __init__(self, df, test_size=0.33, random_state=42, row_sampling=True,
                  rounds=250, max_iter=100, simple_model=False, mean_model=False,
                  cutoff=0, model_name=None, solver='lbfgs'):
+
+        ''''
+
+        :param test_size: float - The fraction of the dataframe thest should be used as a test set
+        :param random_state: int - A number that is used as a random seed to ensure the model performs exactly the same
+            each it is run with a given set of hyperparameters
+        :param sample_frac: float - The fraction of the rows and columns that should be sampled for the ensemble model
+        :param rounds: int - Number of sampling rounds for the Ensemble model
+        :param row_sampling: boolean - Indicating whether the rows should be sampled in addition to the columns
+        :param max_iter: int - Maximum number of iterations for the Logistic Regression models
+        :param simple_model: boolean - Boolean for model type
+        :param mean_model: boolean - Boolean for model type
+        :param cutoff: float - Number between 0 and 1 that is the cutoff point for predicted probabilities.
+        :param solver: string - See scikit-learn documentation for all posible solvers for the Logistic Regression
+        '''
 
         self.df = df
         self.test_size = test_size
